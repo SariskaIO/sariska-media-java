@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
-        SariskaMediaTransport.init(getApplication()); // initialize sdk
+        SariskaMediaTransport.initializeSdk(getApplication()); // initialize sdk
         mLocalContainer = findViewById(R.id.local_video_view_container);
         mRemoteContainer = findViewById(R.id.remote_video_view_container);
 
