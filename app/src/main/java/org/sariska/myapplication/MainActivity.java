@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
 
     private RelativeLayout mLocalContainer;
 
-
     private List<JitsiLocalTrack> localTracks;
 
     private WebRTCView remoteView;
@@ -130,6 +129,15 @@ public class MainActivity extends AppCompatActivity {
         mRemoteContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(localView == null){
+                    mLocalContainer.addView(remoteView);
+                    remoteView=null;
+                }
+
+                if(remoteView == null){
+                    return;
+                }
+
                 if(tap %2  == 0){
                     mRemoteContainer.removeView(remoteView);
                     mLocalContainer.removeView(localView);
@@ -145,18 +153,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        /*
-        imageViewMute.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                for(JitsiLocalTrack track : localTracks){
-                    Log.d("LocalTrakcID", track.getId());
-                    track.mute();
-                }
-            }
-        });
-    */
 
     }
 
