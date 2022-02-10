@@ -14,15 +14,15 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
+            credentials {
+                username = "SariskaIO"
+                password = "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"
+            }
+        }
         google()
         jcenter()
-        maven {
-              url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
-              credentials {
-                   username = "SariskaIO"
-                   password = "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"
-              }
-        }
     }
 }
 
