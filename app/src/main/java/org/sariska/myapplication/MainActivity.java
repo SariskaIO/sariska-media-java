@@ -55,10 +55,12 @@ public class MainActivity extends AppCompatActivity {
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
+
         SariskaMediaTransport.initializeSdk(getApplication()); // initialize sdk
         mLocalContainer = findViewById(R.id.local_video_view_container);
         mRemoteContainer = findViewById(R.id.remote_video_view_container);
         imageViewEndCall = findViewById(R.id.endcall);
+
 
         this.setupLocalStream();
 
@@ -66,9 +68,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String token = "";
-                    token = GetToken.generateToken("abcdefgh", "test1234");
-                    connection = SariskaMediaTransport.JitsiConnection(token);
+                    String token = GetToken.generateToken("abcdefgh", "test1234");
+                    connection = SariskaMediaTransport.JitsiConnection(token, "test1234", false);
                     connection.addEventListener("CONNECTION_ESTABLISHED", this::createConference);
                     connection.addEventListener("CONNECTION_FAILED", () -> {
                     });
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
+
             public void createConference() {
 
                 conference = connection.initJitsiConference();
@@ -88,18 +90,20 @@ public class MainActivity extends AppCompatActivity {
                         conference.addTrack(track);
                     }
                 });
+
                 conference.addEventListener("DOMINANT_SPEAKER_CHANGED", p -> {
                     String id = (String) p;
                 });
                 conference.addEventListener("CONFERENCE_LEFT", () -> {
                 });
+
                 conference.addEventListener("TRACK_ADDED", p -> {
                     JitsiRemoteTrack track = (JitsiRemoteTrack) p;
                     runOnUiThread(() -> {
                         if (track.getType().equals("video")) {
                             WebRTCView view = track.render();
                             view.setMirror(true);
-                            Log.d("Added Remote Track","Added");
+                            Log.d("Added Remote Track",String.valueOf(track.isMuted()));
                             view.setObjectFit("cover");
                             remoteView = view;
                             mRemoteContainer.addView(view);
@@ -113,12 +117,20 @@ public class MainActivity extends AppCompatActivity {
                         mRemoteContainer.removeView(remoteView);
                     });
                 });
+
                 conference.join();
             }
         });
 
         tokenThread.start();
 
+        // Add button and container click listeners
+        addRequiredListeners(alert);
+
+    }
+
+    private void addRequiredListeners(AlertDialog alert) {
+        //Add listener to end call
         imageViewEndCall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -126,41 +138,45 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //And listener to change container focus
         mRemoteContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(localView == null){
-                    mLocalContainer.addView(remoteView);
-                    remoteView=null;
-                }
-
-                if(remoteView == null){
-                    return;
-                }
-
-                if(tap %2  == 0){
-                    mRemoteContainer.removeView(remoteView);
-                    mLocalContainer.removeView(localView);
-                    mLocalContainer.addView(remoteView);
-                    mRemoteContainer.addView(localView);
-                    tap++;
-                }else{
-                    mLocalContainer.removeView(remoteView);
-                    mRemoteContainer.removeView(localView);
-                    mLocalContainer.addView(localView);
-                    mRemoteContainer.addView(remoteView);
-                    tap++;
-                }
+                changeContainerFocus();
             }
         });
+    }
 
+    private void changeContainerFocus() {
+        if(localView == null){
+            mLocalContainer.addView(remoteView);
+            remoteView=null;
+        }
+
+        if(remoteView == null){
+            return;
+        }
+
+        if(tap %2  == 0){
+            mRemoteContainer.removeView(remoteView);
+            mLocalContainer.removeView(localView);
+            mLocalContainer.addView(remoteView);
+            mRemoteContainer.addView(localView);
+            tap++;
+        }else{
+            mLocalContainer.removeView(remoteView);
+            mRemoteContainer.removeView(localView);
+            mLocalContainer.addView(localView);
+            mRemoteContainer.addView(remoteView);
+            tap++;
+        }
     }
 
     public void setupLocalStream() {
         Bundle options = new Bundle();
         options.putBoolean("audio", true);
         options.putBoolean("video", true);
-        options.putInt("resolution", 720);  // 180, 240, 360, 720, 1080
+        options.putInt("resolution", 1080);  // 180, 240, 360, 720, 1080
 //      options.putString("facingMode", "user");   user or environment
 //      options.putBoolean("desktop", true);  for screen sharing
 //      options.putString("micDeviceId", "mic_device_id");
@@ -217,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
                 "Leave",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        MainActivity.super.onDestroy();
                         conference.leave();
                         connection.disconnect();
                         finish();
