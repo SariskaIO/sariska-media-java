@@ -49,6 +49,45 @@
                 android:keepScreenOn="true"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_baseline_call_end_24" />
+            <ImageView
+                android:id="@+id/muteCall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="50dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_mic_24" />
+            <ImageView
+                android:id="@+id/unmuteCall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="50dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_mic_off_24" />
+            <ImageView
+                android:id="@+id/muteVideo"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="300dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_videocam_off_24" />
         </RelativeLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

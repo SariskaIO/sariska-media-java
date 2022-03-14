@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import com.oney.WebRTCModule.WebRTCView;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -39,7 +38,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView imageViewEndCall;
 
-    private ImageView imageViewMute;
+    private ImageView imageViewSwitchCamera;
+
+    private ImageView imageViewMuteAudio;
+
+    private ImageView imageViewMuteVideo;
+
 
     String[] PERMISSIONS = {
             android.Manifest.permission.CAMERA,
@@ -60,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
         mLocalContainer = findViewById(R.id.local_video_view_container);
         mRemoteContainer = findViewById(R.id.remote_video_view_container);
         imageViewEndCall = findViewById(R.id.endcall);
+        imageViewMuteAudio = findViewById(R.id.unmuteCall);
+        imageViewMuteVideo = findViewById(R.id.muteVideo);
 
 
         this.setupLocalStream();
@@ -68,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String token = GetToken.generateToken("abcdefgh", "test1234");
-                    connection = SariskaMediaTransport.JitsiConnection(token, "test1234", false);
+                    String token = GetToken.generateToken("abcdefgh", "dipak");
+                    connection = SariskaMediaTransport.JitsiConnection(token, "dipak", false);
                     connection.addEventListener("CONNECTION_ESTABLISHED", this::createConference);
                     connection.addEventListener("CONNECTION_FAILED", () -> {
                     });
@@ -82,17 +88,18 @@ public class MainActivity extends AppCompatActivity {
             }
 
             public void createConference() {
-
+                System.out.println("We are in createConference");
                 conference = connection.initJitsiConference();
 
                 conference.addEventListener("CONFERENCE_JOINED", () -> {
                     for (JitsiLocalTrack track : localTracks) {
-                        conference.addTrack(track);
+                            conference.addTrack(track);
                     }
                 });
 
                 conference.addEventListener("DOMINANT_SPEAKER_CHANGED", p -> {
                     String id = (String) p;
+                    conference.selectParticipant(id);
                 });
                 conference.addEventListener("CONFERENCE_LEFT", () -> {
                 });
@@ -103,9 +110,7 @@ public class MainActivity extends AppCompatActivity {
                         if (track.getType().equals("video")) {
                             WebRTCView view = track.render();
                             view.setMirror(true);
-                            Log.d("Added Remote Track",String.valueOf(track.isMuted()));
                             view.setObjectFit("cover");
-                            remoteView = view;
                             mRemoteContainer.addView(view);
                         }
                     });
@@ -117,8 +122,10 @@ public class MainActivity extends AppCompatActivity {
                         mRemoteContainer.removeView(remoteView);
                     });
                 });
-
                 conference.join();
+
+
+                System.out.println("We are past createConference");
             }
         });
 
@@ -126,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Add button and container click listeners
         addRequiredListeners(alert);
-
     }
 
     private void addRequiredListeners(AlertDialog alert) {
@@ -138,13 +144,56 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //And listener to change container focus
+        //Add listener to change container focus
         mRemoteContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 changeContainerFocus();
             }
         });
+
+        //Add listener to switch Camera
+//        imageViewSwitchCamera.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                for (JitsiLocalTrack track : localTracks) {
+//                    track.switchCamera();
+//                }
+//            }
+//        });
+
+        //Add Listener to mute audio
+        imageViewMuteAudio.setOnClickListener(new View.OnClickListener() {
+            int tap = 0;
+            @Override
+            public void onClick(View v) {
+                if(tap%2 == 0){
+                    localTracks.get(0).mute();
+                    imageViewMuteAudio = findViewById(R.id.muteCall);
+                    tap++;
+                }else{
+                    localTracks.get(0).unmute();
+                    imageViewMuteAudio = findViewById(R.id.unmuteCall);
+                    tap++;
+                }
+            }
+        });
+
+        // Add Listener to mute video
+        imageViewMuteVideo.setOnClickListener(new View.OnClickListener() {
+            int tapVideo = 0;
+            @Override
+            public void onClick(View v) {
+                if(tapVideo%2 == 0){
+                    localTracks.get(1).mute();
+                    tapVideo++;
+                }else{
+                    localTracks.get(1).unmute();
+                    tapVideo++;
+                }
+            }
+        });
+
     }
 
     private void changeContainerFocus() {
@@ -152,11 +201,9 @@ public class MainActivity extends AppCompatActivity {
             mLocalContainer.addView(remoteView);
             remoteView=null;
         }
-
         if(remoteView == null){
             return;
         }
-
         if(tap %2  == 0){
             mRemoteContainer.removeView(remoteView);
             mLocalContainer.removeView(localView);
@@ -176,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         Bundle options = new Bundle();
         options.putBoolean("audio", true);
         options.putBoolean("video", true);
-        options.putInt("resolution", 1080);  // 180, 240, 360, 720, 1080
+        options.putInt("resolution", 360);  // 180, 240, 360, 720, 1080
 //      options.putString("facingMode", "user");   user or environment
 //      options.putBoolean("desktop", true);  for screen sharing
 //      options.putString("micDeviceId", "mic_device_id");
@@ -233,7 +280,9 @@ public class MainActivity extends AppCompatActivity {
                 "Leave",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        conference.leave();
+                        if(conference != null){
+                            conference.leave();
+                        }
                         connection.disconnect();
                         finish();
                     }
