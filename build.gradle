@@ -14,15 +14,18 @@ buildscript {
 
 allprojects {
     repositories {
+
+        maven { url = '/Users/dipaksisodiya/Desktop/Development/react-native-track-player/android' }
+        maven {
+            url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
+            credentials {
+                username = "SariskaIO"
+                password = "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"
+            }
+        }
+        mavenCentral()
         google()
         jcenter()
-        maven {
-              url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
-              credentials {
-                   username = "SariskaIO"
-                   password = "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"
-              }
-        }
     }
 }
 

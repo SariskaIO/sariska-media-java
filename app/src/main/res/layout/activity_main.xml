@@ -5,28 +5,89 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
     <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
+        android:orientation="vertical"
+        >
         <RelativeLayout
             android:orientation="vertical"
             android:id="@+id/local_video_view_container"
             android:layout_width="wrap_content"
-            android:layout_height="240dp">
+            android:layout_weight="9"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_height="match_parent">
+            <RelativeLayout
+                android:id="@+id/remote_video_view_container"
+                android:layout_width="140dp"
+                android:layout_height="240dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="0dp"
+                android:layout_marginLeft="270dp"
+                android:orientation="vertical"/>
         </RelativeLayout>
-
-
         <RelativeLayout
             android:orientation="vertical"
-            android:id="@+id/remote_video_view_container"
-            android:layout_width="wrap_content"
-            android:layout_height="240dp">
+            android:id="@+id/options"
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="70dp"
+            android:background="@color/black">
+            <ImageView
+                android:id="@+id/endcall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="170dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_call_end_24" />
+            <ImageView
+                android:id="@+id/muteCall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="50dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_mic_24" />
+            <ImageView
+                android:id="@+id/unmuteCall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="50dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_mic_off_24" />
+            <ImageView
+                android:id="@+id/muteVideo"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="300dp"
+                android:layout_marginBottom="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:singleLine="true"
+                android:keepScreenOn="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_videocam_off_24" />
         </RelativeLayout>
-
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

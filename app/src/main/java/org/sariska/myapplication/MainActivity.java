@@ -1,16 +1,21 @@
 package org.sariska.myapplication;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import com.oney.WebRTCModule.WebRTCView;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import org.sariska.sdk.Connection;
-import org.sariska.sdk.Conference;
-import org.sariska.sdk.JitsiRemoteTrack;
-import org.sariska.sdk.SariskaMediaTransport;
-import org.sariska.sdk.JitsiLocalTrack;
+import io.sariska.sdk.Connection;
+import io.sariska.sdk.Conference;
+import io.sariska.sdk.JitsiRemoteTrack;
+import io.sariska.sdk.SariskaMediaTransport;
+import io.sariska.sdk.JitsiLocalTrack;
+import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Connection connection;
 
+    private int tap = 0;
+
     private RelativeLayout mRemoteContainer;
 
     private RelativeLayout mLocalContainer;
@@ -26,6 +33,17 @@ public class MainActivity extends AppCompatActivity {
     private List<JitsiLocalTrack> localTracks;
 
     private WebRTCView remoteView;
+
+    private WebRTCView localView;
+
+    private ImageView imageViewEndCall;
+
+    private ImageView imageViewSwitchCamera;
+
+    private ImageView imageViewMuteAudio;
+
+    private ImageView imageViewMuteVideo;
+
 
     String[] PERMISSIONS = {
             android.Manifest.permission.CAMERA,
@@ -37,93 +55,193 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        AlertDialog alert = getBuilder().create();
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
+
         SariskaMediaTransport.initializeSdk(getApplication()); // initialize sdk
         mLocalContainer = findViewById(R.id.local_video_view_container);
         mRemoteContainer = findViewById(R.id.remote_video_view_container);
+        imageViewEndCall = findViewById(R.id.endcall);
+        imageViewMuteAudio = findViewById(R.id.unmuteCall);
+        imageViewMuteVideo = findViewById(R.id.muteVideo);
+
 
         this.setupLocalStream();
 
-        String token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjI0ZmQ2ZjkyZDZkMDE3NDkyZTNlOThlMzM0ZWJhZmM3NmRkMzUwYmI5M2EwNzI5ZDM4IiwidHlwIjoiSldUIn0.eyJjb250ZXh0Ijp7InVzZXIiOnsiaWQiOiJ6dG5reWw3biIsIm5hbWUiOiJqaiJ9LCJncm91cCI6Imc3cWtua205YWJ0cDFuYWd2eXk1ZnUifSwic3ViIjoiMiIsInJvb20iOiJwNHN1anR5YWsiLCJpYXQiOjE2MTg0NDMxNTksIm5iZiI6MTYxODQ0MzE1OSwiaXNzIjoic2FyaXNrYSIsImF1ZCI6Im1lZGlhX21lc3NhZ2luZ19zYXJpc2thIiwiZXhwIjoxNjE4NTI5NTU5fQ.dhGrKmmRE7E1Mr_Hp3Nu9VSoR7mMEmYz5nI-Fp8ZR97wOXMdvvgjUA_xr2ghYTMP6DGm81MztqsJFW5BSZ18D5ejtx11MyjdTDcsVBiVXNmUO7C6KCHHPDEjRirC1mNc5d9V7Unta-Fo6K6oLyWnsPyfctXdrURk8ChrnXPyHvX_TiZalotdkmChooTbCQlL8SNRk-j8-HVWToYxukv7aB7AvTSvh_e9xshAlsZMzO9dfoenkMH4XILfxCfcWcj-gdfZnflwSu5kpBW6CmY-I9Fe6M4DUGamNplgyua3xe1olwXMe-Ofo48-Yu0vkHbE4ssuoMEsgm0vCt7GXTRd2w";
+        Thread tokenThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String token = GetToken.generateToken("abcdefgh", "dipak");
+                    connection = SariskaMediaTransport.JitsiConnection(token, "dipak", false);
+                    connection.addEventListener("CONNECTION_ESTABLISHED", this::createConference);
+                    connection.addEventListener("CONNECTION_FAILED", () -> {
+                    });
+                    connection.addEventListener("CONNECTION_DISCONNECTED", () -> {
+                    });
+                    connection.connect();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
 
-        connection = SariskaMediaTransport.JitsiConnection(token);
+            public void createConference() {
+                System.out.println("We are in createConference");
+                conference = connection.initJitsiConference();
 
-        connection.addEventListener("CONNECTION_ESTABLISHED", this::createConference);
+                conference.addEventListener("CONFERENCE_JOINED", () -> {
+                    for (JitsiLocalTrack track : localTracks) {
+                            conference.addTrack(track);
+                    }
+                });
 
-        connection.addEventListener("CONNECTION_FAILED", () -> {
+                conference.addEventListener("DOMINANT_SPEAKER_CHANGED", p -> {
+                    String id = (String) p;
+                    conference.selectParticipant(id);
+                });
+                conference.addEventListener("CONFERENCE_LEFT", () -> {
+                });
+
+                conference.addEventListener("TRACK_ADDED", p -> {
+                    JitsiRemoteTrack track = (JitsiRemoteTrack) p;
+                    runOnUiThread(() -> {
+                        if (track.getType().equals("video")) {
+                            WebRTCView view = track.render();
+                            view.setMirror(true);
+                            view.setObjectFit("cover");
+                            mRemoteContainer.addView(view);
+                        }
+                    });
+                });
+
+                conference.addEventListener("TRACK_REMOVED", p -> {
+                    JitsiRemoteTrack track = (JitsiRemoteTrack) p;
+                    runOnUiThread(() -> {
+                        mRemoteContainer.removeView(remoteView);
+                    });
+                });
+                conference.join();
+
+
+                System.out.println("We are past createConference");
+            }
         });
 
-        connection.addEventListener("CONNECTION_DISCONNECTED", () -> {
+        tokenThread.start();
+
+        // Add button and container click listeners
+        addRequiredListeners(alert);
+    }
+
+    private void addRequiredListeners(AlertDialog alert) {
+        //Add listener to end call
+        imageViewEndCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                alert.show();
+            }
         });
-        connection.connect();
+
+        //Add listener to change container focus
+        mRemoteContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                changeContainerFocus();
+            }
+        });
+
+        //Add listener to switch Camera
+//        imageViewSwitchCamera.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                for (JitsiLocalTrack track : localTracks) {
+//                    track.switchCamera();
+//                }
+//            }
+//        });
+
+        //Add Listener to mute audio
+        imageViewMuteAudio.setOnClickListener(new View.OnClickListener() {
+            int tap = 0;
+            @Override
+            public void onClick(View v) {
+                if(tap%2 == 0){
+                    localTracks.get(0).mute();
+                    imageViewMuteAudio = findViewById(R.id.muteCall);
+                    tap++;
+                }else{
+                    localTracks.get(0).unmute();
+                    imageViewMuteAudio = findViewById(R.id.unmuteCall);
+                    tap++;
+                }
+            }
+        });
+
+        // Add Listener to mute video
+        imageViewMuteVideo.setOnClickListener(new View.OnClickListener() {
+            int tapVideo = 0;
+            @Override
+            public void onClick(View v) {
+                if(tapVideo%2 == 0){
+                    localTracks.get(1).mute();
+                    tapVideo++;
+                }else{
+                    localTracks.get(1).unmute();
+                    tapVideo++;
+                }
+            }
+        });
+
+    }
+
+    private void changeContainerFocus() {
+        if(localView == null){
+            mLocalContainer.addView(remoteView);
+            remoteView=null;
+        }
+        if(remoteView == null){
+            return;
+        }
+        if(tap %2  == 0){
+            mRemoteContainer.removeView(remoteView);
+            mLocalContainer.removeView(localView);
+            mLocalContainer.addView(remoteView);
+            mRemoteContainer.addView(localView);
+            tap++;
+        }else{
+            mLocalContainer.removeView(remoteView);
+            mRemoteContainer.removeView(localView);
+            mLocalContainer.addView(localView);
+            mRemoteContainer.addView(remoteView);
+            tap++;
+        }
     }
 
     public void setupLocalStream() {
         Bundle options = new Bundle();
         options.putBoolean("audio", true);
         options.putBoolean("video", true);
-        options.putInt("resolution", 240);  // 180, 240, 360, 720, 1080
+        options.putInt("resolution", 360);  // 180, 240, 360, 720, 1080
 //      options.putString("facingMode", "user");   user or environment
 //      options.putBoolean("desktop", true);  for screen sharing
 //      options.putString("micDeviceId", "mic_device_id");
 //      options.putString("cameraDeviceId", "camera_device_id");
-
         SariskaMediaTransport.createLocalTracks(options, tracks -> {
             runOnUiThread(() -> {
                 localTracks = tracks;
                 for (JitsiLocalTrack track : tracks) {
                     if (track.getType().equals("video")) {
                         WebRTCView view = track.render();
+                        view.setMirror(true);
+                        localView = view;
                         view.setObjectFit("cover");
                         mLocalContainer.addView(view);
                     }
                 }
             });
         });
-    }
-
-
-    public void createConference() {
-
-        conference = connection.initJitsiConference();
-        
-        conference.addEventListener("CONFERENCE_JOINED", () -> {
-            for (JitsiLocalTrack track : localTracks) {
-                conference.addTrack(track);
-            }
-        });
-
-        conference.addEventListener("DOMINANT_SPEAKER_CHANGED", p -> {
-            String id = (String) p;
-
-        });
-
-        conference.addEventListener("CONFERENCE_LEFT", () -> {
-
-        });
-
-        conference.addEventListener("TRACK_ADDED", p -> {
-            JitsiRemoteTrack track = (JitsiRemoteTrack) p;
-            runOnUiThread(() -> {
-                if (track.getType().equals("video")) {
-                    WebRTCView view = track.render();
-                    view.setObjectFit("cover");
-                    remoteView = view;
-                    mRemoteContainer.addView(view);
-                }
-            });
-        });
-
-        conference.addEventListener("TRACK_REMOVED", p -> {
-            JitsiRemoteTrack track = (JitsiRemoteTrack) p;
-            runOnUiThread(() -> {
-                mRemoteContainer.removeView(remoteView);
-            });
-        });
-
-        conference.join();
     }
 
     public boolean hasPermissions(MainActivity context, String... permissions) {
@@ -154,4 +272,27 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    public Builder getBuilder(){
+        Builder builder = new Builder(MainActivity.this);
+        builder.setMessage("Are you sure you want to leave?");
+        builder.setCancelable(true);
+        builder.setPositiveButton(
+                "Leave",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        if(conference != null){
+                            conference.leave();
+                        }
+                        connection.disconnect();
+                        finish();
+                    }
+                }).setNegativeButton(
+                "Cancel",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+                });
+        return builder;
+    }
 }

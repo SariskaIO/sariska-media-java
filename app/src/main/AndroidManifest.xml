@@ -15,11 +15,18 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:screenOrientation="portrait" >
+        <meta-data android:name="io.sentry.dsn" android:value="https://a4805c16e3d246dc81c42eed276e7a4a@debug.sariska.io/40" />
+        <provider
+            android:name="com.facebook.react.modules.blob.BlobProvider"
+            android:authorities="@string/blob_provider_authority"
+            android:exported="false"
+            />
         <activity android:name=".MainActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
