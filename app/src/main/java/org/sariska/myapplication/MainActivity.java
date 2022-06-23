@@ -1,37 +1,33 @@
 package org.sariska.myapplication;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AlertDialog.Builder;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import com.oney.WebRTCModule.WebRTCView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
-import io.sariska.sdk.Connection;
-import io.sariska.sdk.Conference;
-import io.sariska.sdk.JitsiRemoteTrack;
-import io.sariska.sdk.SariskaMediaTransport;
-import io.sariska.sdk.JitsiLocalTrack;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog.Builder;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.oney.WebRTCModule.WebRTCView;
+
 import java.io.IOException;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
+import io.sariska.sdk.Conference;
+import io.sariska.sdk.Connection;
+import io.sariska.sdk.JitsiLocalTrack;
+import io.sariska.sdk.JitsiRemoteTrack;
+import io.sariska.sdk.SariskaMediaTransport;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -179,9 +175,11 @@ public class MainActivity extends AppCompatActivity {
                 JitsiLocalTrack localTrack = localTracks.get(0);
                 if (tapAudio%2 == 0) {
                     localTrack.mute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
                     imageViewMuteAudio.setImageResource(R.drawable.ic_baseline_mic_off_24);
                 } else {
                     localTrack.unmute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
                     imageViewMuteAudio.setImageResource(R.drawable.ic_baseline_mic_24);
                 }
                 tapAudio++;
@@ -196,9 +194,11 @@ public class MainActivity extends AppCompatActivity {
                 JitsiLocalTrack localTrack = localTracks.get(1);
                 if(tapVideo%2 == 0){
                     localTrack.mute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
                     imageViewMuteVideo.setImageResource(R.drawable.ic_baseline_videocam_off_24);
                 }else{
                     localTrack.unmute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
                     imageViewMuteVideo.setImageResource(R.drawable.ic_baseline_videocam_24);
                 }
                 tapVideo++;
