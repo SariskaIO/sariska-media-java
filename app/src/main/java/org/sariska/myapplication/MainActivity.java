@@ -143,6 +143,9 @@ public class MainActivity extends AppCompatActivity {
                 conference.addEventListener("TRACK_REMOVED", p -> {
                     JitsiRemoteTrack track = (JitsiRemoteTrack) p;
                     runOnUiThread(() -> {
+                        for(int i=0;i<userList.size();i++){
+                            if(userList.get(i) == track) userList.remove(i);
+                        }
                         sariskaRemoteAdapter.notifyDataSetChanged();
                     });
                 });
