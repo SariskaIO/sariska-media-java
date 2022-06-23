@@ -14,16 +14,15 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class GetToken {
-    protected static String generateToken(String userID, String roomName) throws IOException {
+    protected static String generateToken(String userID) throws IOException {
         OkHttpClient client = new OkHttpClient();
         final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         String url = "https://api.sariska.io/api/v1/misc/generate-token";
         String json = "{\n" +
-                "    \"sessionId\": \""+roomName+"\",\n" +
                 "    \"apiKey\": \"27fd6f8080d512442a3694f461adb3986cda5ba39dbe368d75\",\n" +
                 "    \"user\": {\n" +
-                "        \"id\": \"abcdefg\",\n" +
-                "        \"name\": \"Dipak-2\",\n" +
+                "        \"id\": \"dsds\",\n" +
+                "        \"name\": \"SomeOne\",\n" +
                 "        \"moderator\": false,\n" +
                 "        \"email\": \"dipak@work.com\",\n" +
                 "        \"avatar\":\"null\"\n" +

@@ -1,22 +1,34 @@
 package org.sariska.myapplication;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.oney.WebRTCModule.WebRTCView;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import io.sariska.sdk.Connection;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.sariska.sdk.Conference;
+import io.sariska.sdk.Connection;
+import io.sariska.sdk.JitsiLocalTrack;
 import io.sariska.sdk.JitsiRemoteTrack;
 import io.sariska.sdk.SariskaMediaTransport;
-import io.sariska.sdk.JitsiLocalTrack;
-import java.io.IOException;
-import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,13 +38,9 @@ public class MainActivity extends AppCompatActivity {
 
     private int tap = 0;
 
-    private RelativeLayout mRemoteContainer;
-
     private RelativeLayout mLocalContainer;
 
     private List<JitsiLocalTrack> localTracks;
-
-    private WebRTCView remoteView;
 
     private WebRTCView localView;
 
@@ -49,22 +57,32 @@ public class MainActivity extends AppCompatActivity {
             android.Manifest.permission.CAMERA,
             android.Manifest.permission.RECORD_AUDIO
     };
+
     int PERMISSION_ALL = 1;
+
+    @BindView(R.id.rvOtherMembers)
+    RecyclerView rvOtherMembers;
+    ArrayList<JitsiRemoteTrack> userList;
+    RemoteAdapter sariskaRemoteAdapter;
+    AlertDialog alert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        AlertDialog alert = getBuilder().create();
+        alert = getBuilder().create();
+
+        ButterKnife.bind(this);
+
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
 
         SariskaMediaTransport.initializeSdk(getApplication()); // initialize sdk
         mLocalContainer = findViewById(R.id.local_video_view_container);
-        mRemoteContainer = findViewById(R.id.remote_video_view_container);
+
         imageViewEndCall = findViewById(R.id.endcall);
-        imageViewMuteAudio = findViewById(R.id.unmuteCall);
+        imageViewMuteAudio = findViewById(R.id.muteCall);
         imageViewMuteVideo = findViewById(R.id.muteVideo);
 
 
@@ -74,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String token = GetToken.generateToken("abcdefgh", "dipak");
+                    String token = GetToken.generateToken("abcdefgh");
                     connection = SariskaMediaTransport.JitsiConnection(token, "dipak", false);
                     connection.addEventListener("CONNECTION_ESTABLISHED", this::createConference);
                     connection.addEventListener("CONNECTION_FAILED", () -> {
@@ -101,17 +119,23 @@ public class MainActivity extends AppCompatActivity {
                     String id = (String) p;
                     conference.selectParticipant(id);
                 });
+
                 conference.addEventListener("CONFERENCE_LEFT", () -> {
                 });
 
                 conference.addEventListener("TRACK_ADDED", p -> {
                     JitsiRemoteTrack track = (JitsiRemoteTrack) p;
+                    if (track.getStreamURL().equals(localTracks.get(1).getStreamURL())) {
+                        //So as to not add local track in remote container
+                        return;
+                    }
+
                     runOnUiThread(() -> {
                         if (track.getType().equals("video")) {
-                            WebRTCView view = track.render();
-                            view.setMirror(true);
-                            view.setObjectFit("cover");
-                            mRemoteContainer.addView(view);
+                            System.out.println("Adding to userList");
+                            userList.add(0,track);
+                            System.out.println("USer list length is: "+ userList.size());
+                            sariskaRemoteAdapter.notifyDataSetChanged();
                         }
                     });
                 });
@@ -119,19 +143,18 @@ public class MainActivity extends AppCompatActivity {
                 conference.addEventListener("TRACK_REMOVED", p -> {
                     JitsiRemoteTrack track = (JitsiRemoteTrack) p;
                     runOnUiThread(() -> {
-                        mRemoteContainer.removeView(remoteView);
+                        sariskaRemoteAdapter.notifyDataSetChanged();
                     });
                 });
                 conference.join();
-
-
                 System.out.println("We are past createConference");
             }
         });
 
         tokenThread.start();
-
-        // Add button and container click listeners
+        userList = new ArrayList<>();
+        sariskaRemoteAdapter = new RemoteAdapter();
+        rvOtherMembers.setAdapter(sariskaRemoteAdapter);
         addRequiredListeners(alert);
     }
 
@@ -144,38 +167,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Add listener to change container focus
-        mRemoteContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                changeContainerFocus();
-            }
-        });
-
-        //Add listener to switch Camera
-//        imageViewSwitchCamera.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                for (JitsiLocalTrack track : localTracks) {
-//                    track.switchCamera();
-//                }
-//            }
-//        });
-
         //Add Listener to mute audio
         imageViewMuteAudio.setOnClickListener(new View.OnClickListener() {
-            int tap = 0;
+            int tapAudio = 0;
             @Override
             public void onClick(View v) {
-                if(tap%2 == 0){
-                    localTracks.get(0).mute();
-                    imageViewMuteAudio = findViewById(R.id.muteCall);
-                    tap++;
-                }else{
-                    localTracks.get(0).unmute();
-                    imageViewMuteAudio = findViewById(R.id.unmuteCall);
-                    tap++;
+                JitsiLocalTrack localTrack = localTracks.get(0);
+                if (tapAudio%2 == 0) {
+                    localTrack.mute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
+                    imageViewMuteAudio.setImageResource(R.drawable.ic_baseline_mic_off_24);
+                } else {
+                    localTrack.unmute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
+                    imageViewMuteAudio.setImageResource(R.drawable.ic_baseline_mic_24);
                 }
+                tapAudio++;
             }
         });
 
@@ -184,39 +191,20 @@ public class MainActivity extends AppCompatActivity {
             int tapVideo = 0;
             @Override
             public void onClick(View v) {
+                JitsiLocalTrack localTrack = localTracks.get(1);
                 if(tapVideo%2 == 0){
-                    localTracks.get(1).mute();
-                    tapVideo++;
+                    localTrack.mute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
+                    imageViewMuteVideo.setImageResource(R.drawable.ic_baseline_videocam_off_24);
                 }else{
-                    localTracks.get(1).unmute();
-                    tapVideo++;
+                    localTrack.unmute();
+                    System.out.println("The track is muted? "+ localTrack.isMuted());
+                    imageViewMuteVideo.setImageResource(R.drawable.ic_baseline_videocam_24);
                 }
+                tapVideo++;
             }
         });
 
-    }
-
-    private void changeContainerFocus() {
-        if(localView == null){
-            mLocalContainer.addView(remoteView);
-            remoteView=null;
-        }
-        if(remoteView == null){
-            return;
-        }
-        if(tap %2  == 0){
-            mRemoteContainer.removeView(remoteView);
-            mLocalContainer.removeView(localView);
-            mLocalContainer.addView(remoteView);
-            mRemoteContainer.addView(localView);
-            tap++;
-        }else{
-            mLocalContainer.removeView(remoteView);
-            mRemoteContainer.removeView(localView);
-            mLocalContainer.addView(localView);
-            mRemoteContainer.addView(remoteView);
-            tap++;
-        }
     }
 
     public void setupLocalStream() {
@@ -294,5 +282,39 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         return builder;
+    }
+
+    public class RemoteAdapter extends RecyclerView.Adapter<RemoteAdapter.ItemViewHolder> {
+
+        @NonNull
+        @Override
+        public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_item_remote_views, parent, false);
+            return new ItemViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
+            WebRTCView view = userList.get(position).render();
+            view.setMirror(true);
+            view.setObjectFit("cover");
+            holder.remote_video_view_container.addView(view);
+        }
+
+        @Override
+        public int getItemCount() {
+            return userList.size();
+        }
+
+        public class ItemViewHolder extends RecyclerView.ViewHolder {
+
+            @BindView(R.id.remote_video_view_container)
+            RelativeLayout remote_video_view_container;
+
+            public ItemViewHolder(@NonNull View itemView) {
+                super(itemView);
+                ButterKnife.bind(this, itemView);
+            }
+        }
     }
 }
