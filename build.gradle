@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.0.0"
+        classpath 'com.android.tools.build:gradle:7.1.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -20,7 +20,7 @@ allprojects {
             url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
             credentials {
                 username = "SariskaIO"
-                password = "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"
+                password = "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"
             }
         }
         mavenCentral()

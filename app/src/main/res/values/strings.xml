@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Sariska</string>
-    <string name="blob_provider_authority">io.sariskajava.blob</string>
-    <string name="todo">TODO</string>
+    <string name="app_name">sariskademojava</string>
+    <string name="blob_provider_authority">io.sariskajavademo.blob</string>
 </resources>
