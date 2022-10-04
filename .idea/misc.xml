@@ -8,6 +8,8 @@
         <entry key="app/src/main/res/drawable/ic_baseline_mic_24.xml" value="0.2085" />
         <entry key="app/src/main/res/drawable/ic_baseline_mic_off_24.xml" value="0.2085" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25364583333333335" />
+        <entry key="app/src/main/res/layout/calling_page_layout.xml" value="0.11614583333333334" />
+        <entry key="app/src/main/res/layout/login_page_layout.xml" value="0.1408514492753623" />
         <entry key="app/src/main/res/layout/row_item_remote_views.xml" value="0.2427536231884058" />
       </map>
     </option>
