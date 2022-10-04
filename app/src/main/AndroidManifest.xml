@@ -23,7 +23,7 @@
             android:authorities="@string/blob_provider_authority"
             android:exported="false"
             />
-        <activity android:name=".MainActivity">
+        <activity android:name=".CallingPageActivity">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
