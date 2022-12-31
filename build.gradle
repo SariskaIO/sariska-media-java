@@ -20,7 +20,7 @@ allprojects {
             url = "https://maven.pkg.github.com/SariskaIO/maven-repository"
             credentials {
                 username = "SariskaIO"
-                password = "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"
+                password = "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"
             }
         }
         mavenCentral()
